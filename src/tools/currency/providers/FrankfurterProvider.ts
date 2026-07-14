@@ -7,7 +7,7 @@ interface CachedData {
 
 const CACHE_EXPIRY_MS = 45 * 60 * 1000; // 45분 캐싱
 
-// API가 실패하거나 오프라인 상태일 때 사용할 안전한 기본 백업 환율 (기준: USD)
+// API가 실패하거나 오프라인 상태일 때 사용할 안전한 기본 백업 환율 (기준: USD) 
 const FALLBACK_USD_RATES: Record<string, number> = {
   USD: 1.0,
   KRW: 1380.0,
