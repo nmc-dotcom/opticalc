@@ -21,7 +21,7 @@ const FALLBACK_USD_RATES: Record<string, number> = {
 };
 
 export class FrankfurterProvider implements ExchangeRateProvider {
-  private baseUrl = 'https://api.frankfurter.app';
+  private baseUrl = 'https://api.frankfurter.dev/v1';
 
   async getRates(from: string): Promise<RatesResult> {
     const cacheKey = `exchange_rates_${from}`;
