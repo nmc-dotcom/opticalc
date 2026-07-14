@@ -2,19 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { toolRegistry, getToolById } from './tools/registry';
 import { IconMapper } from './components/IconMapper';
 import { Accordion } from './components/Accordion';
-import { 
-  Search, 
-  Star, 
-  Clock, 
-  ArrowLeft, 
-  Share2, 
-  Check, 
-  Calculator, 
-  Ruler, 
+import {
+  Search,
+  Star,
+  Clock,
+  ArrowLeft,
+  Share2,
+  Check,
+  Calculator,
+  Ruler,
   RefreshCw,
   ExternalLink,
   BookOpen,
-  HelpCircle
+  HelpCircle,
+  Menu,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -43,6 +45,9 @@ export default function App() {
 
   // 3. UI 알림 피드백 (공유 등)
   const [shareFeedback, setShareFeedback] = useState(false);
+
+  // 3-1. 모바일 좌측 도구 메뉴 드로어 상태
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // 4. URL Hash 변경 감지하여 라우팅 동기화
   useEffect(() => {
@@ -73,6 +78,24 @@ export default function App() {
     localStorage.setItem('calc_recent', JSON.stringify(recentTools));
   }, [recentTools]);
 
+  // 드로어 열림 시 배경 스크롤 잠금
+  useEffect(() => {
+    document.body.style.overflow = isDrawerOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isDrawerOpen]);
+
+  // 드로어 열림 시 ESC 키로 닫기
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsDrawerOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDrawerOpen]);
+
   // 도구 선택(이동) 시 핸들러
   const handleNavigateToTool = (id: string) => {
     window.location.hash = `#/tool/${id}`;
@@ -81,6 +104,7 @@ export default function App() {
       const filtered = prev.filter((t) => t !== id);
       return [id, ...filtered].slice(0, 4);
     });
+    setIsDrawerOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -128,24 +152,156 @@ export default function App() {
   // 활성 도구 객체 찾기
   const activeTool = currentToolId ? getToolById(currentToolId) : null;
 
+  // 좌측 도구 탐색 콘텐츠 (데스크톱 고정 사이드바 / 모바일 드로어 공용)
+  const sidebarContent = (
+    <>
+      {/* 검색 바 */}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[10px] font-bold text-[#2F6B4F] uppercase tracking-widest pl-1">도구 검색</span>
+        <div className="relative flex items-center rounded-xl bg-[#F3EEE0] border border-[#E2D8C2] focus-within:border-[#2F6B4F] focus-within:ring-2 focus-within:ring-[#2F6B4F]/10 transition-all duration-200">
+          <Search className="absolute left-3 w-4 h-4 text-[#2F6B4F]/60" />
+          <input
+            type="text"
+            placeholder="도구명을 검색하세요..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2.5 bg-transparent text-sm text-[#2C2A24] placeholder-[#6F695B]/60 outline-none font-medium"
+          />
+        </div>
+      </div>
+
+      {/* 도구 분류 목록 */}
+      <div className="flex flex-col gap-5">
+        {/* 1. 금융/생활 계산기 */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-bold text-[#2F6B4F]/70 uppercase tracking-widest pl-1 flex items-center gap-1.5">
+            <Calculator className="w-3.5 h-3.5" /> 올인원 계산기
+          </span>
+          <div className="flex flex-col gap-1">
+            {calculatorTools.length > 0 ? (
+              calculatorTools.map((item) => {
+                const isSelected = currentToolId === item.config.id;
+                return (
+                  <button
+                    key={item.config.id}
+                    onClick={() => handleNavigateToTool(item.config.id)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left text-xs font-semibold cursor-pointer transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-[#ECE4D2] border-[#2F6B4F] text-[#2C2A24]'
+                        : 'bg-transparent border-transparent text-[#2F6B4F]/85 hover:bg-[#ECE4D2] hover:text-[#2C2A24]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <IconMapper name={item.config.icon} className={`w-3.5 h-3.5 ${isSelected ? 'text-[#2C2A24]' : 'text-[#2F6B4F]'}`} />
+                      <span className="truncate">{item.config.title}</span>
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <span className="text-[11px] text-[#6F695B] pl-1 py-1">검색 결과 없음</span>
+            )}
+          </div>
+        </div>
+
+        <hr className="border-[#E2D8C2]" />
+
+        {/* 2. 단위 변환기 */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-bold text-[#2F6B4F]/70 uppercase tracking-widest pl-1 flex items-center gap-1.5">
+            <Ruler className="w-3.5 h-3.5" /> 단위 변환기
+          </span>
+          <div className="flex flex-col gap-1">
+            {converterTools.length > 0 ? (
+              converterTools.map((item) => {
+                const isSelected = currentToolId === item.config.id;
+                return (
+                  <button
+                    key={item.config.id}
+                    onClick={() => handleNavigateToTool(item.config.id)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left text-xs font-semibold cursor-pointer transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-[#ECE4D2] border-[#2F6B4F] text-[#2C2A24]'
+                        : 'bg-transparent border-transparent text-[#2F6B4F]/85 hover:bg-[#ECE4D2] hover:text-[#2C2A24]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <IconMapper name={item.config.icon} className={`w-3.5 h-3.5 ${isSelected ? 'text-[#2C2A24]' : 'text-[#2F6B4F]'}`} />
+                      <span className="truncate">{item.config.title}</span>
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <span className="text-[11px] text-[#6F695B] pl-1 py-1">검색 결과 없음</span>
+            )}
+          </div>
+        </div>
+
+        <hr className="border-[#E2D8C2]" />
+
+        {/* 3. 실시간 환율 */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-bold text-[#2F6B4F]/70 uppercase tracking-widest pl-1 flex items-center gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5" /> 실시간 환율
+          </span>
+          <div className="flex flex-col gap-1">
+            {currencyTools.length > 0 ? (
+              currencyTools.map((item) => {
+                const isSelected = currentToolId === item.config.id;
+                return (
+                  <button
+                    key={item.config.id}
+                    onClick={() => handleNavigateToTool(item.config.id)}
+                    className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left text-xs font-semibold cursor-pointer transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-[#ECE4D2] border-[#2F6B4F] text-[#2C2A24]'
+                        : 'bg-transparent border-transparent text-[#2F6B4F]/85 hover:bg-[#ECE4D2] hover:text-[#2C2A24]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <IconMapper name={item.config.icon} className={`w-3.5 h-3.5 ${isSelected ? 'text-[#2C2A24]' : 'text-[#2F6B4F]'}`} />
+                      <span className="truncate">{item.config.title}</span>
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <span className="text-[11px] text-[#6F695B] pl-1 py-1">검색 결과 없음</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-[#F3EEE0] text-[#2C2A24] font-sans antialiased selection:bg-[#2F6B4F]/10 selection:text-[#2F6B4F]">
       
       {/* 글로벌 브랜딩 헤더 상단바 */}
       <header className="border-b border-[#E2D8C2] bg-[#F3EEE0]/85 backdrop-blur-md sticky top-0 z-40 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <button 
-            onClick={handleBackToHome}
-            className="flex items-center gap-2.5 cursor-pointer group"
-          >
-            <div className="w-8 h-8 rounded-xl bg-[#2F6B4F] text-white flex items-center justify-center font-serif font-extrabold italic text-lg shadow-sm shadow-[#2F6B4F]/10 group-hover:scale-105 transition-transform">
-              O
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-base font-serif font-extrabold tracking-tight text-[#2C2A24]">OptiCalc</span>
-              <span className="text-[9px] font-bold text-[#2F6B4F]/70 tracking-widest uppercase">by Holorado</span>
-            </div>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="md:hidden p-2 -ml-1.5 mr-0.5 rounded-lg text-[#2F6B4F] hover:bg-[#ECE4D2] transition-colors cursor-pointer"
+              aria-label="도구 메뉴 열기"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleBackToHome}
+              className="flex items-center gap-2.5 cursor-pointer group"
+            >
+              <div className="w-8 h-8 rounded-xl bg-[#2F6B4F] text-white flex items-center justify-center font-serif font-extrabold italic text-lg shadow-sm shadow-[#2F6B4F]/10 group-hover:scale-105 transition-transform">
+                O
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-base font-serif font-extrabold tracking-tight text-[#2C2A24]">OptiCalc</span>
+                <span className="text-[9px] font-bold text-[#2F6B4F]/70 tracking-widest uppercase">by Holorado</span>
+              </div>
+            </button>
+          </div>
 
           <nav className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-wider text-[#2F6B4F]/80">
             <a href="https://holorado.me" className="hover:text-[#2C2A24] transition-colors flex items-center gap-0.5">
@@ -161,129 +317,50 @@ export default function App() {
         </div>
       </header>
 
+      {/* 모바일 전용 도구 메뉴 드로어 (슬라이드 인/아웃 + 배경 오버레이) */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <>
+            <motion.div
+              key="drawer-backdrop"
+              className="md:hidden fixed inset-0 z-50 bg-black/50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsDrawerOpen(false)}
+            />
+            <motion.aside
+              key="drawer-panel"
+              className="md:hidden fixed inset-y-0 left-0 z-[60] w-80 max-w-[85vw] bg-[#FBF8F0] border-r border-[#E2D8C2] shadow-2xl p-5 flex flex-col gap-5 overflow-y-auto"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-[#2F6B4F] uppercase tracking-widest pl-1">도구 메뉴</span>
+                <button
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="p-1.5 rounded-lg text-[#6F695B] hover:bg-[#ECE4D2] hover:text-[#2C2A24] transition-colors cursor-pointer"
+                  aria-label="도구 메뉴 닫기"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* 메인 콘텐츠 영역 - 2단 사이드바 레이아웃 */}
       <main className="max-w-7xl mx-auto px-4 py-8 md:py-12">
         <div className="flex flex-col md:flex-row gap-8 items-start">
           
-          {/* 1. 좌측 도구 탐색 사이드바 (데스크톱 고정, 모바일 상단 배치) */}
-          <aside className="w-full md:w-80 shrink-0 bg-[#FBF8F0] border border-[#E2D8C2] rounded-3xl p-5 shadow-sm flex flex-col gap-5">
-            {/* 검색 바 */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold text-[#2F6B4F] uppercase tracking-widest pl-1">도구 검색</span>
-              <div className="relative flex items-center rounded-xl bg-[#F3EEE0] border border-[#E2D8C2] focus-within:border-[#2F6B4F] focus-within:ring-2 focus-within:ring-[#2F6B4F]/10 transition-all duration-200">
-                <Search className="absolute left-3 w-4 h-4 text-[#2F6B4F]/60" />
-                <input
-                  type="text"
-                  placeholder="도구명을 검색하세요..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-transparent text-sm text-[#2C2A24] placeholder-[#6F695B]/60 outline-none font-medium"
-                />
-              </div>
-            </div>
-
-            {/* 도구 분류 목록 */}
-            <div className="flex flex-col gap-5">
-              {/* 1. 금융/생활 계산기 */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold text-[#2F6B4F]/70 uppercase tracking-widest pl-1 flex items-center gap-1.5">
-                  <Calculator className="w-3.5 h-3.5" /> 올인원 계산기
-                </span>
-                <div className="flex flex-col gap-1">
-                  {calculatorTools.length > 0 ? (
-                    calculatorTools.map((item) => {
-                      const isSelected = currentToolId === item.config.id;
-                      return (
-                        <button
-                          key={item.config.id}
-                          onClick={() => handleNavigateToTool(item.config.id)}
-                          className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left text-xs font-semibold cursor-pointer transition-all duration-200 ${
-                            isSelected
-                              ? 'bg-[#ECE4D2] border-[#2F6B4F] text-[#2C2A24]'
-                              : 'bg-transparent border-transparent text-[#2F6B4F]/85 hover:bg-[#ECE4D2] hover:text-[#2C2A24]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <IconMapper name={item.config.icon} className={`w-3.5 h-3.5 ${isSelected ? 'text-[#2C2A24]' : 'text-[#2F6B4F]'}`} />
-                            <span className="truncate">{item.config.title}</span>
-                          </div>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <span className="text-[11px] text-[#6F695B] pl-1 py-1">검색 결과 없음</span>
-                  )}
-                </div>
-              </div>
-
-              <hr className="border-[#E2D8C2]" />
-
-              {/* 2. 단위 변환기 */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold text-[#2F6B4F]/70 uppercase tracking-widest pl-1 flex items-center gap-1.5">
-                  <Ruler className="w-3.5 h-3.5" /> 단위 변환기
-                </span>
-                <div className="flex flex-col gap-1">
-                  {converterTools.length > 0 ? (
-                    converterTools.map((item) => {
-                      const isSelected = currentToolId === item.config.id;
-                      return (
-                        <button
-                          key={item.config.id}
-                          onClick={() => handleNavigateToTool(item.config.id)}
-                          className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left text-xs font-semibold cursor-pointer transition-all duration-200 ${
-                            isSelected
-                              ? 'bg-[#ECE4D2] border-[#2F6B4F] text-[#2C2A24]'
-                              : 'bg-transparent border-transparent text-[#2F6B4F]/85 hover:bg-[#ECE4D2] hover:text-[#2C2A24]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <IconMapper name={item.config.icon} className={`w-3.5 h-3.5 ${isSelected ? 'text-[#2C2A24]' : 'text-[#2F6B4F]'}`} />
-                            <span className="truncate">{item.config.title}</span>
-                          </div>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <span className="text-[11px] text-[#6F695B] pl-1 py-1">검색 결과 없음</span>
-                  )}
-                </div>
-              </div>
-
-              <hr className="border-[#E2D8C2]" />
-
-              {/* 3. 실시간 환율 */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold text-[#2F6B4F]/70 uppercase tracking-widest pl-1 flex items-center gap-1.5">
-                  <RefreshCw className="w-3.5 h-3.5" /> 실시간 환율
-                </span>
-                <div className="flex flex-col gap-1">
-                  {currencyTools.length > 0 ? (
-                    currencyTools.map((item) => {
-                      const isSelected = currentToolId === item.config.id;
-                      return (
-                        <button
-                          key={item.config.id}
-                          onClick={() => handleNavigateToTool(item.config.id)}
-                          className={`flex items-center justify-between px-3 py-2 rounded-xl border text-left text-xs font-semibold cursor-pointer transition-all duration-200 ${
-                            isSelected
-                              ? 'bg-[#ECE4D2] border-[#2F6B4F] text-[#2C2A24]'
-                              : 'bg-transparent border-transparent text-[#2F6B4F]/85 hover:bg-[#ECE4D2] hover:text-[#2C2A24]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <IconMapper name={item.config.icon} className={`w-3.5 h-3.5 ${isSelected ? 'text-[#2C2A24]' : 'text-[#2F6B4F]'}`} />
-                            <span className="truncate">{item.config.title}</span>
-                          </div>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <span className="text-[11px] text-[#6F695B] pl-1 py-1">검색 결과 없음</span>
-                  )}
-                </div>
-              </div>
-            </div>
+          {/* 1. 좌측 도구 탐색 사이드바 (데스크톱 전용 고정 표시) */}
+          <aside className="hidden md:flex md:w-80 md:shrink-0 flex-col gap-5 bg-[#FBF8F0] border border-[#E2D8C2] rounded-3xl p-5 shadow-sm">
+            {sidebarContent}
           </aside>
 
           {/* 2. 우측 메인 대시보드 및 도구 상세 영역 */}
