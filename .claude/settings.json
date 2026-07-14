@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -L -A \"Mozilla/5.0\" https://holorado.me/_astro/_slug_.vE72Vhzk.css)",
+      "Bash(grep -oE -- '--[a-z-]+:\\\\s*#[0-9a-fA-F]{3,8}')",
+      "Bash(curl -s -L -A \"Mozilla/5.0\" https://holorado.me)",
+      "Bash(grep -oE -- '--[a-zA-Z-]+:\\\\s*#[0-9a-fA-F]{3,8}')",
+      "Bash(node -e ' *)",
+      "Bash(node \"C:\\\\Users\\\\jeong\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\e--AI-opticalc\\\\f403b7b2-7cc6-428f-abe3-ce5e8898e028\\\\scratchpad\\\\rebrand.js\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(powershell -Command 'Get-Process node -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -eq '\\\\'''\\\\'' } | Select-Object Id')",
+      "Bash(pkill -f \"vite --port=3000\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 2 http://localhost:3000/)",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue; if \\($conn\\) { $conn | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -Confirm:$false } }; Start-Sleep -Milliseconds 500; Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue)"
+    ]
+  }
+}
