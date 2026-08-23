@@ -10,7 +10,7 @@ export const currencyConfig: ToolConfig = {
   faq: [
     {
       question: '환율 정보는 얼마나 자주 업데이트되나요?',
-      answer: 'Frankfurter API를 기반으로 실시간 최신 환율 정보를 호출하며, 네트워크 부하 최소화를 위해 브라우저에서 45분간 자동 캐싱을 진행합니다.',
+      answer: 'Frankfurter API를 기반으로 실시간 최신 환율 정보를 호출하며, 네트워크 부하 최소화를 위해 브라우저에서 12시간 동안 자동 캐싱을 진행합니다. (원본 데이터가 하루 1회 갱신되므로 정확도 손실 없이 API 호출을 줄입니다.)',
     },
     {
       question: '오프라인 상태나 API 장애 시에도 작동하나요?',

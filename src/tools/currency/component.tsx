@@ -27,7 +27,7 @@ export const CurrencyConverter: React.FC = () => {
           setResult(res);
         }
       } catch (err) {
-        console.error('환율 변환 중 요류:', err);
+        console.error('환율 변환 중 오류:', err);
       } finally {
         if (active) {
           setLoading(false);
@@ -115,7 +115,7 @@ export const CurrencyConverter: React.FC = () => {
             <div className="flex items-start gap-2.5 p-4 rounded-xl bg-[#FBF1E6] border border-[#EFD9BC] text-[#8A5A2A]">
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
               <p className="text-xs font-semibold leading-relaxed">
-                실시간 환율 데이터를 가져오지 못해, 저장된 참고용 환율을 표시하고 있습니다. 실제 거래에는 최신 고시 환율을 다시 확인해 주세요.
+                실시간 환율 데이터를 가져오지 못해, {result.fallbackAsOf ?? ''} 기준으로 저장된 참고용 환율을 표시하고 있습니다. 실제 거래에는 최신 고시 환율을 다시 확인해 주세요.
               </p>
             </div>
           )}
