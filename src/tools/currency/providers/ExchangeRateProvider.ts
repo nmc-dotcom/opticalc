@@ -1,13 +1,15 @@
 export interface RatesResult {
   rates: Record<string, number>;
   isFallback: boolean;
-  fallbackAsOf?: string;
+  asOf?: string;
+  source?: string;
 }
 
 export interface RateResult {
   rate: number;
   isFallback: boolean;
-  fallbackAsOf?: string;
+  asOf?: string;
+  source?: string;
 }
 
 export interface ExchangeRateProvider {

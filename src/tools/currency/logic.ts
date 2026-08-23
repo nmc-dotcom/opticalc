@@ -21,7 +21,8 @@ export interface ConversionResult {
   rate: number;
   convertedAmount: number;
   isFallback: boolean;
-  fallbackAsOf?: string;
+  asOf?: string;
+  source?: string;
 }
 
 export async function convertCurrency(
@@ -33,7 +34,7 @@ export async function convertCurrency(
     return { fromAmount: amount, fromCurrency: from, toCurrency: to, rate: 1, convertedAmount: 0, isFallback: false };
   }
 
-  const { rate, isFallback, fallbackAsOf } = await provider.getRate(from, to);
+  const { rate, isFallback, asOf, source } = await provider.getRate(from, to);
   let convertedAmount = amount * rate;
 
   return {
@@ -43,6 +44,7 @@ export async function convertCurrency(
     rate,
     convertedAmount,
     isFallback,
-    fallbackAsOf,
+    asOf,
+    source,
   };
 }
